@@ -1,0 +1,8 @@
+2026-01-12_10:15:01 INFO  app.startup        Application started
+2026-01-12_10:15:02 INFO  db.connection     Database connection established
+2026-01-12_10:15:05 WARN  auth.login        Failed login attempt for user=admin
+2026-01-12_10:15:08 INFO  auth.login        User login successful user=john_doe
+2026-01-12_10:15:12 ERROR payments.process Payment failed order_id=1042 reason=INSUFFICIENT_FUNDS
+2026-01-12_10:15:15 INFO  payments.process Payment retry initiated order_id=1042
+2026-01-12_10:15:18 INFO  payments.process Payment completed order_id=1042
+2026-01-12_10:15:22 INFO  app.shutdown      Application shutdown complete

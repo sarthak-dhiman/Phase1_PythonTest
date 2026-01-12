@@ -1,0 +1,3 @@
+2026-01-12_10:15:12 ERROR payments.process Payment failed order_id=1042 reason=INSUFFICIENT_FUNDS
+2026-01-12_10:15:12 ERROR payments.process Payment failed order_id=1042 reason=INSUFFICIENT_FUNDS
+2026-01-12_10:15:12 ERROR payments.process Payment failed order_id=1042 reason=INSUFFICIENT_FUNDS

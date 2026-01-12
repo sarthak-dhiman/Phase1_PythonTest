@@ -1,0 +1,7 @@
+
+File path error - [Errno 2] No such file or directory: 'gg'invalid choice error - {e}
+
+invalid choice error - invalid choice
+invalid choice error - invalid choice : 7
+File path error - [Errno 2] No such file or directory: 'random file'
+File path error - [Errno 2] No such file or directory: 'name'

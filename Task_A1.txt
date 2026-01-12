@@ -1,0 +1,25 @@
+# Creating a new virtual environment -
+python3 -m venv venv
+
+# Activating the virtual environment
+venv/scripts/activate
+
+# Installing python dependencies - 
+pip install "package name". here i installed requests and fast api hence i used -
+pip install requests
+pip install fastapi
+
+# creating requierments.txt -
+pip freeze > requierments.txt
+
+# pyenv vs venv
+
+
+venv is an isolated python virtual environment.it is an inbuilt module of python , and it helps -
+1) to manage dependencies of each project seprately 
+2) avoids system wide conficts
+3) advisable to have  a virtual environment for each python project
+
+whereas pyenv is a module which is used to manage multiple python versions.
+used where the code needs to be validated on diff python installation versions.
+should be used inside a venv as it may cause global conflicts otherwise
