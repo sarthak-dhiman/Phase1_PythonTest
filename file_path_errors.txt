@@ -1,3 +1,0 @@
-jg gave error - [Errno 2] No such file or directory: 'jg'File path error - [Errno 2] No such file or directory: 'random'
- File path error - [Errno 2] No such file or directory: 'random1'
-File path error - [Errno 2] No such file or directory: 'random1.log'
