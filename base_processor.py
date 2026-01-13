@@ -13,10 +13,34 @@ import sys
 
 def main(file_name: str | None = None) -> None:
     logger = logging.getLogger(__name__)
+    # If caller provided a filename programmatically, use it.
+    # Otherwise try to read from CLI args, then prompt if stdin is a TTY,
+    # and finally fall back to a sensible default for non-interactive runs.
+    if file_name is None:
+        import argparse
+        parser = argparse.ArgumentParser(add_help=False)
+        parser.add_argument('file', nargs='?', help='Path to log file')
+        parser.add_argument('--file', dest='file_arg', help='Path to log file')
+        args, _ = parser.parse_known_args()
 
-    if not file_name:
-        print("Enter the file name or directory")
-        file_name = input().strip()
+        # Prefer positional, then --file
+        file_name = None
+        if args and getattr(args, 'file', None):
+            file_name = args.file
+        elif args and getattr(args, 'file_arg', None):
+            file_name = args.file_arg
+
+        # If still no filename, prompt interactively when possible
+        if not file_name:
+            if sys.stdin.isatty():
+                try:
+                    print("Enter the file name or directory (default: log.txt): ", end='', flush=True)
+                    file_name = input().strip() or 'log.txt'
+                except EOFError:
+                    file_name = 'log.txt'
+            else:
+                # Non-interactive environment (CI, container without TTY): use default
+                file_name = 'log.txt'
 
     # Resolve the provided path. Try as given, then relative to this module's directory
     # so that passing names like "log.txt" works when running from repo root.
