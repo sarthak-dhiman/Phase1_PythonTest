@@ -55,4 +55,5 @@ def test_additional_analytics():
     logs = {'LEVEL': ['INFO', 'WARN', 'ERROR', 'DEBUG', 'UNKNOWN']}
     ua = user_analytics.UserAnalytics(logs)
     stats = ua.calculate_stats()
-    assert stats['INVALID'] == 2
+    # DEBUG is a known level now; only 'UNKNOWN' should be invalid
+    assert stats['INVALID'] == 1

@@ -1,13 +1,10 @@
-"""Module log_file
-
-Provides the LogFile class to parse simple whitespace-delimited log files.
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
 import logging
 from typing import Dict, List
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +16,8 @@ class LogFile:
     Expected line format (minimum):
         <TIMESTAMP> <LEVEL> <MODULE> <MESSAGE...>
 
+    The parser recognizes standard levels including DEBUG, INFO, WARN, ERROR
+    and treats any other token as a level as well (grouped as INVALID by analytics).
     The parser is tolerant to extra whitespace and skips malformed lines.
     """
 
@@ -54,16 +53,21 @@ class LogFile:
         """Parse file content into self.logs and return it."""
         lines = self.load_file()
 
-        for line in lines:
-            parts = line.strip().split()
-            if len(parts) < 4:
-                logger.debug("Skipping malformed line (expected >=4 parts): %r", line)
+        # Regex: timestamp (non-space), level (non-space), module (non-space), message (rest)
+        pattern = re.compile(r"^(\S+)\s+(\S+)\s+(\S+)\s+(.*)$")
+        for idx, line in enumerate(lines, start=1):
+            if not line.strip():
+                continue
+            m = pattern.match(line.rstrip('\n'))
+            if not m:
+                logger.debug("Skipping malformed line %d (no match): %r", idx, line)
                 continue
 
-            self.logs["TIMESTAMP"].append(parts[0])
-            self.logs["LEVEL"].append(parts[1])
-            self.logs["MODULE"].append(parts[2])
-            self.logs["MESSAGE"].append(" ".join(parts[3:]))
+            ts, lvl, mod, msg = m.groups()
+            self.logs["TIMESTAMP"].append(ts)
+            self.logs["LEVEL"].append(lvl)
+            self.logs["MODULE"].append(mod)
+            self.logs["MESSAGE"].append(msg)
 
         return self.logs
 

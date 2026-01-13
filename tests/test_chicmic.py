@@ -38,8 +38,9 @@ def test_useranalytics_calculate():
     assert stats['ERROR'] == 1
     assert stats['INFO'] == 1
     assert stats['WARN'] == 1
-    # DEBUG is treated as INVALID
-    assert stats['INVALID'] == 1
+    # DEBUG is now a known level
+    assert stats['DEBUG'] == 1
+    assert stats['INVALID'] == 0
 
 
 def test_baseprocessor_main(tmp_path, capsys):

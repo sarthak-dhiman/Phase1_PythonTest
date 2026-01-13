@@ -1,8 +1,86 @@
-2026-01-12_10:15:01 INFO  app.startup        Application started
-2026-01-12_10:15:02 INFO  db.connection     Database connection established
-2026-01-12_10:15:05 WARN  auth.login        Failed login attempt for user=admin
-2026-01-12_10:15:08 INFO  auth.login        User login successful user=john_doe
-2026-01-12_10:15:12 ERROR payments.process Payment failed order_id=1042 reason=INSUFFICIENT_FUNDS
-2026-01-12_10:15:15 INFO  payments.process Payment retry initiated order_id=1042
-2026-01-12_10:15:18 INFO  payments.process Payment completed order_id=1042
-2026-01-12_10:15:22 INFO  app.shutdown      Application shutdown complete
+2026-01-12_10:15:01 INFO    app.startup      Application started
+2026-01-12_10:15:02 INFO    db.connection    Database connection established
+2026-01-12_10:15:05 WARN    auth.login       Failed login attempt for user=admin
+2026-01-12_10:15:08 INFO    auth.login       User login successful user=john_doe
+2026-01-12_10:15:12 ERROR   payments.process Payment failed order_id=1042 reason=INSUFFICIENT_FUNDS
+2026-01-12_10:15:15 INFO    payments.process Payment retry initiated order_id=1042
+2026-01-12_10:15:18 INFO    payments.process Payment completed order_id=1042
+2026-01-12_10:15:22 INFO    app.shutdown     Application shutdown complete
+
+2026-01-12_10:16:01 DEBUG   cache.manager    Cache miss for key=session_abc123
+2026-01-12_10:16:05 INFO    cache.manager    Cache populated for key=session_abc123
+2026-01-12_10:16:12 INFO    api.request      GET /api/v1/items status=200 time=34ms
+2026-01-12_10:16:18 WARN    api.request      GET /api/v1/items status=500 upstream=timeout
+2026-01-12_10:16:25 ERROR   api.handler      Unhandled exception in request id=req-00123
+2026-01-12_10:16:30 INFO    worker.task      Started background job job_id=job-42
+2026-01-12_10:16:35 DEBUG   worker.task      Progress 10% job_id=job-42
+2026-01-12_10:16:40 DEBUG   worker.task      Progress 50% job_id=job-42
+2026-01-12_10:16:45 INFO    worker.task      Completed job job_id=job-42 duration=0m15s
+2026-01-12_10:16:50 INFO    auth.logout      User logout user=john_doe
+
+2026-01-12_10:17:05 INFO    scheduler        Scheduled run for task=cleanup
+2026-01-12_10:17:10 INFO    scheduler        Cleanup completed removed=23 files
+2026-01-12_10:17:15 WARN    db.pool          Connection pool at 90% capacity
+2026-01-12_10:17:20 ERROR   db.query         Deadlock detected during transaction id=tx-88
+2026-01-12_10:17:25 INFO    db.connection    Reconnected to replica node=replica-2
+2026-01-12_10:17:30 DEBUG   metrics.export   Pushed 12 metrics to endpoint
+2026-01-12_10:17:35 INFO    notifications    Sent email to user=alice@example.com template=welcome
+2026-01-12_10:17:40 WARN    notifications    Retry sending email user=bob@example.com
+2026-01-12_10:17:45 ERROR   notifications    Failed to send sms user=carol reason=provider_timeout
+
+2026-01-12_10:18:01 INFO    auth.login       User login successful user=alice
+2026-01-12_10:18:05 INFO    api.request      POST /api/v1/order status=201 time=120ms
+2026-01-12_10:18:10 DEBUG   payments.process Payment queue length=5
+2026-01-12_10:18:15 INFO    payments.process Payment started order_id=1050
+2026-01-12_10:18:20 ERROR   payments.gateway Gateway returned error code=503
+2026-01-12_10:18:25 INFO    payments.process Payment failed order_id=1050 will_retry=true
+2026-01-12_10:18:30 INFO    payments.process Payment retry initiated order_id=1050
+2026-01-12_10:18:35 INFO    payments.process Payment completed order_id=1050
+
+2026-01-12_10:19:00 DEBUG   cache.manager    Evicted key=session_xyz
+2026-01-12_10:19:05 INFO    api.request      GET /api/v1/profile status=200 time=22ms
+2026-01-12_10:19:10 WARN    auth.login       Suspicious login attempt user=unknown ip=192.168.0.77
+2026-01-12_10:19:15 ERROR   storage.disk     Disk I/O error path=/var/data/objects/0x1 size=4096
+2026-01-12_10:19:20 INFO    storage.replica  Replicated object id=0x1 to replica-1
+2026-01-12_10:19:25 DEBUG   maintenance      Running health checks
+2026-01-12_10:19:30 INFO    maintenance      Health checks passed
+
+2026-01-12_10:20:01 INFO    api.request      PUT /api/v1/user/42 status=204 time=45ms
+2026-01-12_10:20:05 INFO    auth.password    Password reset requested user=dave
+2026-01-12_10:20:10 WARN    auth.password    Multiple reset attempts user=dave count=3
+2026-01-12_10:20:15 DEBUG   db.query         Executing cached query id=q-99
+2026-01-12_10:20:20 INFO    worker.task      Started background job job_id=job-43
+2026-01-12_10:20:30 INFO    worker.task      Completed job job_id=job-43 duration=0m9s
+2026-01-12_10:20:35 ERROR   api.handler      Timeout while handling upload id=up-77
+2026-01-12_10:20:40 INFO    api.request      POST /api/v1/upload status=201 time=220ms
+
+2026-01-12_10:21:01 DEBUG   telemetry        Flushing telemetry buffer size=128
+2026-01-12_10:21:05 INFO    telemetry        Telemetry flush complete
+2026-01-12_10:21:10 WARN    api.rate         Rate limit approaching user=alice remaining=5
+2026-01-12_10:21:15 ERROR   api.rate         Rate limit exceeded user=bob
+2026-01-12_10:21:20 INFO    auth.login       User login successful user=charlie
+2026-01-12_10:21:25 DEBUG   payments.process Worker reclaimed id=worker-07
+2026-01-12_10:21:30 INFO    payments.process Payment queued order_id=1055
+
+2026-01-12_10:22:01 INFO    app.maintenance  Starting maintenance window
+2026-01-12_10:22:05 INFO    app.maintenance  Maintenance completed
+2026-01-12_10:22:10 WARN    scheduler        Task run delayed task=report_generator delay=120s
+2026-01-12_10:22:15 INFO    scheduler        Task report_generator completed
+2026-01-12_10:22:20 DEBUG   db.pool          Connection pool stats active=8 idle=2
+2026-01-12_10:22:25 INFO    api.request      GET /api/v1/metrics status=200 time=18ms
+2026-01-12_10:22:30 ERROR   auth.login       Brute force detected user=mallory
+2026-01-12_10:22:35 INFO    notifications    Batched notifications sent count=12
+
+2026-01-12_10:23:01 INFO    app.shutdown     Graceful shutdown initiated
+2026-01-12_10:23:05 INFO    app.shutdown     All services stopped
+2026-01-12_10:24:00 GARBLED xyz!@#  $%^&*    gibberish_line_without_proper_fields
+2026-01-12_10:24:05 GIBBER  moduleX          this is an unknown level token
+2026-01-12_10:24:10 INFO    moduleX          Normal entry after gibberish
+2026-01-12_10:24:15 DEBUG   moduleX          Debug entry for moduleX
+2026-01-12_10:24:20 ERROR   moduleX          Error entry for moduleX
+2026-01-12_10:24:25 INFO    api.request      GET /api/v1/status status=200 time=12ms
+
+2026-01-12_10:24:35 INFO    extra.module     Routine maintenance check
+2026-01-12_10:24:40 DEBUG   extra.module     Deep inspection details
+2026-01-12_10:24:45 ZZZZZ   unknown.module   Another unknown level token
+2026-01-12_10:24:50 INFO    unknown.module   Recovery succeeded
