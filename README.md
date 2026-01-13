@@ -1,18 +1,14 @@
 # chicmic_test
 
 ## What this folder contains
-A small log parsing + analytics demo. Files have been renamed to follow Python conventions (snake_case modules):
+A small log parsing + analytics demo. Files follow Python conventions (snake_case modules):
 
-- `log_file.py` - Contains `LogFile` class. Parses simple whitespace-delimited log files into a dictionary of lists: TIMESTAMP, LEVEL, MODULE, MESSAGE. Alias `Util` kept for backwards compatibility.
-- `user_analytics.py` - Contains `UserAnalytics` class (alias `util`) which computes counts per log level and prints a simple report.
-- `base_processor.py` - CLI-style runner that loads a log file, parses it, demonstrates mutation/shallow/deep copy behavior and prints the analytics report. Use `base_processor.main(path)` to call programmatically.
-- `tests/test_chicmic.py` - Pytest tests covering parsing, analytics calculations, and execution of `base_processor.main` with a temp file.
+- `log_file.py` - Contains `LogFile` class. Parses whitespace-delimited log files into TIMESTAMP, LEVEL, MODULE, MESSAGE.
+- `user_analytics.py` - Contains `UserAnalytics` class; computes counts per log level and prints a report.
+- `base_processor.py` - CLI-style runner used as the default entrypoint in the Docker image. Use `base_processor.main(path)` to call programmatically.
+- `tests/` - Pytest tests covering parsing and analytics.
 
-Other files (legacy names) remain in the repo for backwards compatibility but new code should import the snake_case modules.
-
-## How to run
-From repository root (`d:\ChicMic_Study`):
-
+## How to run locally (without Docker)
 1. (Optional) Create & activate a virtualenv
    python -m venv .venv
    .\.venv\Scripts\Activate.ps1
@@ -24,12 +20,25 @@ From repository root (`d:\ChicMic_Study`):
    python -m pytest -q
 
 4. Run the demo
-   python -m pip install -r requirements.txt  # if you have external deps
-   cd chicmic_test
+   python -m pip install -r requirements.txt
    python base_processor.py
 
 
-## Notes
-- The parser expects at least 4 tokens per log line: TIMESTAMP LEVEL MODULE MESSAGE...
-- Unknown levels are counted as `INVALID` in analytics.
-- If you need the old module names, they are still present (e.g., `LogFile.py`) and expose compatible classes/aliases.
+## Docker: build and run (PowerShell)
+From the project root (`D:\ChicMic_Study\chicmic_test`):
+
+- Build the image (include the final dot as the build context):
+  docker build -t chicmic_test .
+
+- Run the container interactively and map port 8000 (if your app uses it):
+  docker run --rm -it -p 8000:8000 chicmic_test
+
+- Override the default command (example: run tests):
+  docker run --rm -it chicmic_test pytest -q
+
+- Inspect installed packages inside the image:
+  docker run --rm chicmic_test pip freeze
+
+Notes:
+- Rebuild the image whenever you change `requirements.txt` or the Dockerfile.
+- If you accidentally run `docker buildx build` without a PATH, you will get: "requires 1 argument" — provide `.` as the final argument.
