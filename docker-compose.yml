@@ -1,0 +1,14 @@
+version: "3.8"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: chicmic_test:local
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/app        # bind source for fast iteration in dev
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: python -u base_processor.py
