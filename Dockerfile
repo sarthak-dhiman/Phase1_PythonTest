@@ -6,7 +6,8 @@ FROM python:3.11-slim AS builder
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-WORKDIR /app
+WORKDIR /app 
+ 
 
 # Install build-time packages needed to compile wheels
 RUN apt-get update && \
@@ -52,5 +53,6 @@ COPY . /app
 # Expose port only as documentation; change if not needed
 EXPOSE 8000
 
-# Default command — run base_processor.py
-CMD ["python", "-u", "base_processor.py"]
+# Default behaviour: run API server if API_SERVER env var is set to '1', else run CLI
+ENV API_SERVER=0
+CMD ["/bin/sh", "-c", "if [ \"$API_SERVER\" = \"1\" ]; then exec uvicorn api_server:app --host 0.0.0.0 --port 8000; else exec python -u base_processor.py; fi"]
