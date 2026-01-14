@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 import logging
-from typing import Dict, List
+from typing import Dict, List, Any
 import re
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,8 @@ class LogFile:
     The parser is tolerant to extra whitespace and skips malformed lines.
     """
 
-    file_name: str | Path
+    # Accept a path (str/Path), raw bytes, or a file-like object with `read()`.
+    file_name: str | Path | bytes | Any
     logs: Dict[str, List[str]] = field(
         default_factory=lambda: {
             "TIMESTAMP": [],
@@ -41,13 +42,35 @@ class LogFile:
     def load_file(self) -> list[str]:
         """Load raw lines.
 
+        Supports:
+        - `file_name` as a filesystem path (str/Path)
+        - `file_name` as raw bytes
+        - `file_name` as a file-like object (must implement `read()`)
+
         Returns an empty list if file is missing.
         """
         try:
+            # Raw bytes have highest precedence
+            if isinstance(self.file_name, (bytes, bytearray)):
+                return self.file_name.decode("utf-8").splitlines(True)
+
+            # File-like objects (streams)
+            if hasattr(self.file_name, "read"):
+                raw = self.file_name.read()
+                if isinstance(raw, (bytes, bytearray)):
+                    text = raw.decode("utf-8")
+                else:
+                    text = raw
+                return text.splitlines(True)
+
+            # Fallback to path-based reading
             return self.path.read_text(encoding="utf-8").splitlines(True)
         except FileNotFoundError:
             logger.error("Log file not found: %s", self.path)
             return []
+        except Exception:
+            logger.exception("Failed to load log content from %r", self.file_name)
+            raise
 
     def parse_records(self) -> Dict[str, List[str]]:
         """Parse file content into self.logs and return it."""
