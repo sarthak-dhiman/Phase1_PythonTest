@@ -62,8 +62,10 @@ async def ingest_bytes(session: AsyncSession, raw_bytes: bytes, filename: str | 
         # Normalize/parse timestamp where possible
         ts_val = None
         try:
-            if ts:
+            if ts and dateparser is not None:
                 ts_val = dateparser.parse(ts)
+            else:
+                ts_val = None
         except Exception:
             ts_val = None
 
