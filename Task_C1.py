@@ -9,7 +9,8 @@ This module exposes:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
+from log_file import LogFile
 import logging
 import argparse
 
@@ -23,28 +24,47 @@ def file_checking(file_name: str) -> List[str]:
     return p.read_text(encoding="utf-8").splitlines(True)
 
 
-def log_segregation(lines: List[str]) -> Tuple[Dict[str, List[str]], Dict[str, List[str]]]:
-    logs = {"TIMESTAMP": [], "LEVEL": [], "MODULE": [], "MESSAGE": []}
+def log_segregation(lines_or_path: Union[List[str], str, Path]) -> Tuple[Dict[str, List[str]], Dict[str, List[str]]]:
+    """Segregate logs into a logs dict and an error_list dict.
+
+    Accepts either a list of raw lines or a filesystem path/filename. When a
+    path is provided, parsing is delegated to `LogFile` to ensure a single
+    canonical parser implementation.
+    """
+    # If a path-like object or string is passed, use LogFile to parse.
+    if isinstance(lines_or_path, (str, Path)):
+        lf = LogFile(lines_or_path)
+        lf.parse_records()
+        logs = lf.logs
+    else:
+        lines = lines_or_path
+        logs = {"TIMESTAMP": [], "LEVEL": [], "MODULE": [], "MESSAGE": []}
+        for raw in lines:
+            parts = raw.strip().split()
+            if len(parts) < 4:
+                logger.debug("Skipping malformed line: %r", raw)
+                continue
+            ts, level, module = parts[0], parts[1], parts[2]
+            message = " ".join(parts[3:])
+
+            logs["TIMESTAMP"].append(ts)
+            logs["LEVEL"].append(level)
+            logs["MODULE"].append(module)
+            logs["MESSAGE"].append(message)
+
+    # Build error_list from the canonical logs structure
     error_list = {"TIMESTAMP": [], "LEVEL": [], "MODULE": [], "MESSAGE": []}
-
-    for raw in lines:
-        parts = raw.strip().split()
-        if len(parts) < 4:
-            logger.debug("Skipping malformed line: %r", raw)
-            continue
-        ts, level, module = parts[0], parts[1], parts[2]
-        message = " ".join(parts[3:])
-
-        logs["TIMESTAMP"].append(ts)
-        logs["LEVEL"].append(level)
-        logs["MODULE"].append(module)
-        logs["MESSAGE"].append(message)
-
+    for ts, level, module, msg in zip(
+        logs.get("TIMESTAMP", []),
+        logs.get("LEVEL", []),
+        logs.get("MODULE", []),
+        logs.get("MESSAGE", []),
+    ):
         if level == "ERROR":
             error_list["TIMESTAMP"].append(ts)
             error_list["LEVEL"].append(level)
             error_list["MODULE"].append(module)
-            error_list["MESSAGE"].append(message)
+            error_list["MESSAGE"].append(msg)
 
     return logs, error_list
 

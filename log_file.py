@@ -73,24 +73,62 @@ class LogFile:
             raise
 
     def parse_records(self) -> Dict[str, List[str]]:
-        """Parse file content into self.logs and return it."""
-        lines = self.load_file()
+        """Parse input into `self.logs` and return it.
+
+        This method avoids loading entire files into memory for file-like
+        objects by iterating over the stream line-by-line. Supported input
+        types for `file_name`:
+        - filesystem path (str / Path)
+        - raw bytes or bytearray
+        - file-like object supporting iteration over lines (e.g. open file,
+          io.BytesIO, SpooledTemporaryFile)
+
+        Malformed lines are skipped with a debug log message.
+        """
 
         # Regex: timestamp (non-space), level (non-space), module (non-space), message (rest)
         pattern = re.compile(r"^(\S+)\s+(\S+)\s+(\S+)\s+(.*)$")
-        for idx, line in enumerate(lines, start=1):
+
+        def process_line(idx: int, line: str) -> None:
             if not line.strip():
-                continue
+                return
             m = pattern.match(line.rstrip('\n'))
             if not m:
                 logger.debug("Skipping malformed line %d (no match): %r", idx, line)
-                continue
-
+                return
             ts, lvl, mod, msg = m.groups()
             self.logs["TIMESTAMP"].append(ts)
             self.logs["LEVEL"].append(lvl)
             self.logs["MODULE"].append(mod)
             self.logs["MESSAGE"].append(msg)
+
+        # If raw bytes were provided, decode and iterate lines
+        if isinstance(self.file_name, (bytes, bytearray)):
+            text = self.file_name.decode("utf-8")
+            for idx, line in enumerate(text.splitlines(True), start=1):
+                process_line(idx, line)
+            return self.logs
+
+        # If a file-like object was provided, iterate it line by line
+        if hasattr(self.file_name, "read") and hasattr(self.file_name, "readline"):
+            try:
+                # Some file-like objects are binary; ensure text
+                for idx, raw in enumerate(self.file_name, start=1):
+                    # raw may be bytes
+                    if isinstance(raw, (bytes, bytearray)):
+                        line = raw.decode("utf-8")
+                    else:
+                        line = raw
+                    process_line(idx, line)
+                return self.logs
+            except Exception:
+                # Fall back to load_file behavior if iteration fails
+                logger.exception("Falling back to full-load parsing for %r", self.file_name)
+
+        # Otherwise, treat as path or fallback to loading file contents
+        lines = self.load_file()
+        for idx, line in enumerate(lines, start=1):
+            process_line(idx, line)
 
         return self.logs
 

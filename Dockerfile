@@ -33,11 +33,12 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
-# Install minimal runtime system libs (if any packages require them at runtime)
+# Install minimal runtime system libs (only essentials). Avoid installing
+# build-time packages in the final image to reduce size. If a runtime package
+# requires additional OS libs, add them here explicitly (e.g. ca-certificates).
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        libssl-dev \
-        libffi-dev && \
+        ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy pre-built wheels from builder and install them without network access

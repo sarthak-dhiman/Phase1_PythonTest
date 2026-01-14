@@ -1,0 +1,5 @@
+2023-01-02T01:02:03    INFO    moduleX    Started   with   multiple   spaces
+2023-01-02T01:02:04	DEBUG	moduleX	Detail	with	tabs
+2023-01-02T01:02:05  WARN  moduleY  Potential issue detected
+
+2023-01-02T01:02:07    ERROR    moduleY    Crashed after retry

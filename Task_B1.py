@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Dict, List, Tuple
+from log_file import LogFile
 import logging
 import argparse
 
@@ -33,24 +34,10 @@ def parse_log_file(file_path: str | Path) -> Dict[str, List[str]]:
     Expected per-line format: TIMESTAMP LEVEL MODULE MESSAGE...
     Returns a dict with keys TIMESTAMP, LEVEL, MODULE, MESSAGE.
     """
-    p = Path(file_path)
-    if not p.exists():
-        raise FileNotFoundError(f"Log file not found: {file_path}")
-
-    logs = {"TIMESTAMP": [], "LEVEL": [], "MODULE": [], "MESSAGE": []}
-
-    with p.open("r", encoding="utf-8") as fh:
-        for raw in fh:
-            parts = raw.strip().split()
-            if len(parts) < 4:
-                logger.debug("Skipping malformed line: %r", raw)
-                continue
-            logs["TIMESTAMP"].append(parts[0])
-            logs["LEVEL"].append(parts[1])
-            logs["MODULE"].append(parts[2])
-            logs["MESSAGE"].append(" ".join(parts[3:]))
-
-    return logs
+    # Delegate parsing to the canonical LogFile parser for consistency.
+    lf = LogFile(file_path)
+    lf.parse_records()
+    return lf.logs
 
 
 def find_important_logs(logs: Dict[str, List[str]]) -> List[Tuple[str, str, str, str]]:

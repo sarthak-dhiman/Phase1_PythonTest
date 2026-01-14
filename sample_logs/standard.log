@@ -1,0 +1,5 @@
+2023-01-01T00:00:00 INFO moduleA Started processing request id=1
+2023-01-01T00:00:01 ERROR moduleB Failed to process request id=2
+2023-01-01T00:00:02 DEBUG moduleA Processing details: step=2
+2023-01-01T00:00:03 WARN moduleC Slow response detected
+2023-01-01T00:00:04 INFO moduleA Finished processing request id=1

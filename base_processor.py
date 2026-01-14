@@ -1,8 +1,3 @@
-"""CLI runner for the log parsing demo (snake_case module).
-
-This mirrors the behaviour of the original BaseProcessor but uses snake_case
-module naming to follow Python conventions.
-"""
 from log_file import LogFile
 from user_analytics import UserAnalytics
 import copy
@@ -58,8 +53,7 @@ def main(file_name: str | None = None) -> None:
 
     if not path.exists():
         logger.error("File not found: %s", file_name)
-        print(f"File not found: {file_name}")
-        sys.exit(1)
+        raise FileNotFoundError(f"File not found: {file_name}")
 
     lf = LogFile(file_name)
     logger.info("Loaded LogFile: %s", lf)
@@ -69,8 +63,7 @@ def main(file_name: str | None = None) -> None:
         lf.parse_records()
     except Exception as e:
         logger.exception("Failed to parse records for %s", file_name)
-        print("Failed to parse records:", e)
-        sys.exit(1)
+        raise RuntimeError(f"Failed to parse records: {e}") from e
 
     def mutate_logs(log_dict: dict) -> None:
         log_dict['LEVEL'].append("DEBUG")
@@ -98,3 +91,4 @@ if __name__ == "__main__":
         main()
     except Exception:
         logging.exception("Unhandled exception in base_processor")
+        raise SystemExit(1)

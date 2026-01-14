@@ -19,8 +19,10 @@ def test_upload_valid_file():
     files = {"file": ("sample.txt", io.BytesIO(SAMPLE_LOG.encode("utf-8")), "text/plain")}
     resp = client.post("/upload", files=files)
     assert resp.status_code == 200
+    # Ensure request ID header is present for observability
+    assert "X-Request-ID" in resp.headers and resp.headers["X-Request-ID"]
     data = resp.json()
-    assert data["filename"] == "sample.txt"
+    assert "file_id" in data and isinstance(data["file_id"], str) and data["file_id"]
     assert data["records"] == 3
     assert data["levels"]["INFO"] == 1
     assert data["levels"]["ERROR"] == 1

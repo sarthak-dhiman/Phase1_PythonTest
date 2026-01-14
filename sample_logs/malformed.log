@@ -1,0 +1,5 @@
+this line is malformed and missing fields
+2023-01-04T12:00:00 INFO moduleA Proper line after malformed
+2023-01-04 malformed_missing_parts
+2023-01-04T12:00:02 WARN moduleB Another proper line
+not even close

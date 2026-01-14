@@ -1,0 +1,4 @@
+2023-01-03T10:00:00 ALERT moduleZ Something unusual happened
+2023-01-03T10:00:01 INFO moduleZ Normal operation
+2023-01-03T10:00:02 NOTICE moduleZ Nonstandard level shown
+2023-01-03T10:00:03 ERROR moduleZ Failure after notice
