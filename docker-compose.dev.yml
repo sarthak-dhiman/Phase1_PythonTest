@@ -1,0 +1,23 @@
+﻿version: "3.8"
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: chicmic
+    ports:
+      - "5432:5432"
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    environment:
+      DATABASE_URL: postgresql+asyncpg://root:root@db:5432/chicmic
+      PG_HOST: db
+      PG_PORT: 5432
+      PG_USER: root
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db

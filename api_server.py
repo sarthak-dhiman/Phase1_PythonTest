@@ -1,5 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 import os
 import logging
 from contextvars import ContextVar
@@ -10,6 +12,10 @@ from log_file import LogFile
 from user_analytics import UserAnalytics
 import io
 import ingest as ingest_mod
+from db import get_session, DB_AVAILABLE
+from db import check_db_connection
+from models import Ingest, Log
+from sqlalchemy import select
 
 logger = logging.getLogger(__name__)
 
@@ -46,9 +52,32 @@ logging.basicConfig(
 
 app = FastAPI(title="Log Uploader")
 
+# Serve the frontend static files from ./frontend under /static and provide
+# a simple index route so API routes are not shadowed by StaticFiles.
+if os.path.isdir("frontend"):
+    app.mount("/static", StaticFiles(directory="frontend", html=True), name="static")
+
+
+@app.get("/")
+async def serve_index():
+    index_path = os.path.join(os.getcwd(), "frontend", "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    raise HTTPException(status_code=404, detail="Frontend not found")
+
+
+@app.get("/frontend")
+async def serve_frontend_alias():
+    # Keep a convenient alias so users navigating to /frontend get the UI.
+    index_path = os.path.join(os.getcwd(), "frontend", "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    raise HTTPException(status_code=404, detail="Frontend not found")
+
 
 MAX_UPLOAD_SIZE = 5 * 1024 * 1024  # 5 MB
-ALLOWED_CONTENT_TYPES = {"text/plain"}
+# Allow common text/log content types; be lenient when the client doesn't set a content-type.
+ALLOWED_CONTENT_TYPES = {"text/plain", "text/x-log", "application/octet-stream"}
 
 
 class UploadResponse(BaseModel):
@@ -150,8 +179,67 @@ async def add_request_id_middleware(request: Request, call_next):
     return response
 
 
+@app.get("/api/ingests")
+async def list_ingests():
+    if not DB_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Database not available")
+    async with get_session() as session:
+        stmt = select(Ingest).order_by(Ingest.created_at.desc()).limit(200)
+        res = await session.execute(stmt)
+        items = res.scalars().all()
+        out = []
+        for it in items:
+            out.append(
+                {
+                    "id": str(it.id),
+                    "file_hash": it.file_hash,
+                    "file_name": it.file_name,
+                    "status": it.status,
+                    "created_at": it.created_at.isoformat() if it.created_at else None,
+                    "total_rows": it.total_rows,
+                    "inserted_rows": it.inserted_rows,
+                }
+            )
+        return out
+
+
+@app.get("/api/ingests/{ingest_id}/logs")
+async def get_ingest_logs(ingest_id: str, limit: int = 1000):
+    if not DB_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Database not available")
+    async with get_session() as session:
+        stmt = select(Log).where(Log.ingest_id == ingest_id).order_by(Log.id).limit(limit)
+        res = await session.execute(stmt)
+        rows = res.scalars().all()
+        out = []
+        for r in rows:
+            out.append(
+                {
+                    "id": r.id,
+                    "timestamp": r.timestamp.isoformat() if r.timestamp else None,
+                    "module": r.module,
+                    "level": r.level,
+                    "message": r.message,
+                }
+            )
+        return out
+
+
 if __name__ == "__main__":
     # Run with: python api_server.py  
     import uvicorn
 
     uvicorn.run("api_server:app", host="0.0.0.0", port=8000)
+
+
+@app.on_event("startup")
+async def on_startup():
+    # Attempt to establish DB connectivity so `DB_AVAILABLE` is accurate.
+    try:
+        ok = await check_db_connection(retries=30, delay=1.0)
+        if not ok:
+            logger.warning("Database unavailable at startup; API will return 503 for DB endpoints until it becomes available")
+        else:
+            logger.info("Database reachable at startup")
+    except Exception:
+        logger.exception("Error while checking database connectivity during startup")

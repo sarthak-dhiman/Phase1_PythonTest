@@ -9,6 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from db import get_session
 from models import Ingest, Log
 from log_file import LogFile
+import logging
+from datetime import datetime
+from dateutil import parser as dateparser
+
+logger = logging.getLogger(__name__)
 
 
 async def ingest_bytes(session: AsyncSession, raw_bytes: bytes, filename: str | None = None) -> dict:
@@ -54,12 +59,20 @@ async def ingest_bytes(session: AsyncSession, raw_bytes: bytes, filename: str | 
     # Prepare rows for bulk insert
     rows = []
     for ts, lvl, mod, msg in zip(ts_list, lvl_list, mod_list, msg_list):
+        # Normalize/parse timestamp where possible
+        ts_val = None
+        try:
+            if ts:
+                ts_val = dateparser.parse(ts)
+        except Exception:
+            ts_val = None
+
         # Compute row-level hash to deduplicate identical lines across ingests
-        row_hash = hashlib.sha256("|".join([str(ts), lvl, mod, msg]).encode("utf-8")).hexdigest()
+        row_hash = hashlib.sha256("|".join([str(ts_val), str(lvl), str(mod), str(msg)]).encode("utf-8")).hexdigest()
         rows.append(
             {
                 "ingest_id": ingest.id,
-                "timestamp": None,
+                "timestamp": ts_val,
                 "module": mod,
                 "level": lvl,
                 "message": msg,
@@ -69,7 +82,8 @@ async def ingest_bytes(session: AsyncSession, raw_bytes: bytes, filename: str | 
 
     inserted_rows = 0
     if rows:
-        stmt = pg_insert(Log).values(rows)
+        # Use the mapped table for bulk insert so SQLAlchemy Core targets the table
+        stmt = pg_insert(Log.__table__).values(rows)
         stmt = stmt.on_conflict_do_nothing(index_elements=["row_hash"])
         result = await session.execute(stmt)
         # `rowcount` is best-effort; reflect inserted rows conservatively
@@ -77,6 +91,7 @@ async def ingest_bytes(session: AsyncSession, raw_bytes: bytes, filename: str | 
             inserted_rows = result.rowcount or 0
         except Exception:
             inserted_rows = 0
+        logger.info("Bulk insert attempted: total_rows=%s inserted_estimate=%s", total_rows, inserted_rows)
 
     # Update ingest record
     ingest.total_rows = total_rows
@@ -98,5 +113,17 @@ async def ingest_file_like(file_like: BinaryIO, filename: str | None = None) -> 
     raw = file_like.read()
     if isinstance(raw, str):
         raw = raw.encode("utf-8")
-    async with get_session() as session:
-        return await ingest_bytes(session, raw, filename=filename)
+    try:
+        async with get_session() as session:
+            return await ingest_bytes(session, raw, filename=filename)
+    except RuntimeError:
+        # Database not available; return a clear non-fatal result so callers
+        # (e.g., the upload endpoint) can continue to return analytics to the user.
+        return {
+            "file_hash": hashlib.sha256(raw).hexdigest(),
+            "ingest_id": None,
+            "total_rows": None,
+            "inserted_rows": 0,
+            "skipped": True,
+            "reason": "database_unavailable",
+        }

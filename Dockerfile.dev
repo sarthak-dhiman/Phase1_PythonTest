@@ -1,0 +1,11 @@
+﻿FROM python:3.11-slim
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends gcc libpq-dev postgresql-client && rm -rf /var/lib/apt/lists/*
+COPY requirements.txt /app/requirements.txt
+RUN python -m pip install --upgrade pip setuptools wheel
+RUN pip install --no-cache-dir -r /app/requirements.txt
+RUN pip install --no-cache-dir psycopg2-binary
+COPY . /app
+EXPOSE 8000
+# Run the startup logic inline to avoid host file encoding/line-ending issues
+ENTRYPOINT ["sh", "-c", "retry=0; until pg_isready -h \"${PG_HOST:-localhost}\" -p \"${PG_PORT:-5432}\" -U \"${PG_USER:-root}\" >/dev/null 2>&1 || [ $retry -ge 30 ]; do echo \"Waiting for postgres... ($retry)\"; sleep 1; retry=$((retry+1)); done; export DATABASE_URL=\"${DATABASE_URL:-postgresql+asyncpg://root:root@${PG_HOST:-localhost}:${PG_PORT:-5432}/chicmic}\"; python -m alembic -c alembic.ini upgrade head || echo \"Alembic failed, continuing...\"; exec uvicorn api_server:app --host 0.0.0.0 --port 8000"]

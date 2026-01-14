@@ -3,3 +3,4 @@ __pycache__
 .pytest_cache
 __pycache__/*
 *.pyc
+developer_notes.txt

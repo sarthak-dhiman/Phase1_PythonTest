@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Log Manager</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <header>
+      <div class="brand">
+        <h1>LogParser</h1>
+      </div>
+      <nav>
+        <button id="tab-upload" class="active">Upload</button>
+        <button id="tab-uploads">History</button>
+        <button id="tab-db">DB Explorer</button>
+      </nav>
+    </header>
+
+    <main>
+      <section id="panel-upload" class="panel">
+        <h2>Upload New Log</h2>
+        <form id="upload-form" class="upload-zone">
+          <p style="margin-bottom: 1rem; color: var(--text-muted);">Select a text or log file to parse</p>
+          <input type="file" id="file-input" name="file" accept=".txt,.log,text/plain" />
+          <button type="submit">Start Upload</button>
+        </form>
+        <div id="upload-result-container" style="display:none; margin-top: 20px;">
+            <h3>Result</h3>
+            <pre id="upload-result"></pre>
+        </div>
+      </section>
+
+      <section id="panel-uploads" class="panel" style="display:none">
+        <div style="display: flex; gap: 20px; height: 600px;">
+            <div style="flex: 1; border-right: 1px solid var(--border); overflow-y: auto;">
+                <h3>Recent Uploads</h3>
+                <ul id="uploads-list"></ul>
+            </div>
+            
+            <div style="flex: 2; display: flex; flex-direction: column;">
+                <h3>File Viewer</h3>
+                <div id="file-viewer" style="flex: 1; overflow: hidden; display: flex; flex-direction: column;">
+                    <pre id="file-content" style="height: 100%; margin: 0;">Select a file from the list to view logs.</pre>
+                </div>
+            </div>
+        </div>
+      </section>
+
+      <section id="panel-db" class="panel" style="display:none">
+        <h2>Database Explorer <span style="font-size: 0.8rem; color:var(--text-muted); font-weight: normal">(Read-only)</span></h2>
+        <div class="table-container">
+            <table id="db-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>File Name</th>
+                    <th>Status</th>
+                    <th>Created At</th>
+                    <th>Rows</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+            </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="/static/main.js"></script>
+  </body>
+</html>
